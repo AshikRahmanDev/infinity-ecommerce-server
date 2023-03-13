@@ -52,6 +52,7 @@ async function run() {
         const prevCart = user.cart;
         const exist = prevCart.find((e) => e.id === cart.id);
         if (exist) {
+          res.send({ exist: true });
           return;
         } else {
           const updateDoc = {
@@ -81,14 +82,42 @@ async function run() {
         res.send(result);
       }
     });
+    // delete cart item in user
+    app.put("/deleteItemFromCart/:email", async (req, res) => {
+      const email = req.params.email;
+      const id = req.query.id;
+      console.log(id);
+      const filter = { email: email };
+      const options = { upsert: true };
+      const user = await userCollection.findOne(filter);
+      const prevCart = user.cart;
+      const newCart = prevCart.filter((item) => item.id !== id);
+
+      const updateDoc = {
+        $set: {
+          cart: [...newCart],
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
     // get user cart
     app.get("/cart/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
-      console.log(user);
       const cart = user?.cart;
       res.send(cart);
+    });
+    // get single cart item for checkout
+    app.get("/cart/product/:id", async (req, res) => {
+      const cartId = req.params.id;
+      const email = req.query.email;
+      const filter = { email: email };
+      const user = await userCollection.findOne(filter);
+      const cart = user.cart;
+      const checkoutItem = cart.filter((item) => item.id === cartId);
+      res.send(checkoutItem);
     });
   } finally {
   }
