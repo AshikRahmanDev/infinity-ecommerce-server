@@ -119,6 +119,44 @@ async function run() {
       const checkoutItem = cart.filter((item) => item.id === cartId);
       res.send(checkoutItem);
     });
+    // add review in product
+    app.put("/product/review/:id", async (req, res) => {
+      const id = req.params.id;
+      const rev = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const product = await productsCollection.findOne(filter);
+
+      if (product.reviews) {
+        const prevReview = product?.reviews;
+        const review = { ...rev, id: product.reviews.length + 1 };
+        const updateDoc = {
+          $set: {
+            reviews: [...prevReview, review],
+          },
+        };
+        const result = await productsCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        return res.send(result);
+      } else {
+        const review = { ...rev, id: 1 };
+        const updateDoc = {
+          $set: {
+            reviews: [review],
+          },
+        };
+        const result = await productsCollection.updateOne(
+          filter,
+          updateDoc,
+          options
+        );
+        res.send(result);
+      }
+    });
   } finally {
   }
 }
