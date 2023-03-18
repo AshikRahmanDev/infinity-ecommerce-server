@@ -157,6 +157,13 @@ async function run() {
         res.send(result);
       }
     });
+    // get product review
+    app.get("/product/review/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const product = await productsCollection.findOne(query);
+      res.send(product?.reviews);
+    });
   } finally {
   }
 }
